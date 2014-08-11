@@ -1,0 +1,43 @@
+{
+    "author": {
+        "email": "mateusz.charyotniuk@gmail.com",
+        "name": "Mateusz Charytoniuk"
+    },
+    "keywords": [
+        "batch",
+        "debounce",
+        "gulpplugin",
+        "throttle"
+    ],
+    "name": "gulp-throttle",
+    "description": "Throttle gulp file stream to prevent Node.js's stream 'highWaterMark' from breaking task.",
+    "version": "1.0.0",
+    "main": "smrt-gulp-throttle",
+    "scripts": {
+        "test": "gulp test"
+    },
+    "dependencies": {
+        "gulp-util": "3.x",
+        "q": "1.x",
+        "rx": "2.x",
+        "through2": "0.x"
+    },
+    "devDependencies": {
+        "chai": "1.9.x",
+        "gulp": "3.x",
+        "gulp-cached": "1.x",
+        "gulp-esformatter": "0.x",
+        "gulp-eslint": "0.x",
+        "gulp-istanbul": "0.x",
+        "gulp-mocha": "0.x",
+        "gulp-plumber": "0.x",
+        "gulp-watch": "0.x"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:smrtlabs/smrt-gulp-throttle.git"
+    },
+    "engines": {
+        "node": ">=0.10"
+    }
+}
