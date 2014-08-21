@@ -19,8 +19,7 @@
     "dependencies": {
         "gulp-util": "3.x",
         "q": "1.x",
-        "rx": "2.x",
-        "through2": "0.x"
+        "rx": "2.x"
     },
     "devDependencies": {
         "chai": "1.9.x",
@@ -31,7 +30,8 @@
         "gulp-istanbul": "0.x",
         "gulp-mocha": "0.x",
         "gulp-plumber": "0.x",
-        "gulp-watch": "0.x"
+        "gulp-watch": "0.x",
+        "through2": "0.x"
     },
     "repository": {
         "type": "git",

@@ -8,82 +8,57 @@
 var path = require("path"),
     Q = require("q"),
     Rx = require("rx"),
-    through = require("through2");
+    TransformStream = require("stream").Transform;
 
-function rxFromStream(stream) {
-    return Rx.Observable
-        .create(function (observer) {
-            function dataHandler(data) {
-                observer.onNext(data);
-            }
+function SchedulerStream(streamFeedback) {
+    TransformStream.call(this);
 
-            function errorHandler(err) {
-                observer.onError(err);
-            }
-
-            function endHandler() {
-                observer.onCompleted();
-            }
-
-            stream.addListener("data", dataHandler);
-            stream.addListener("error", errorHandler);
-            stream.addListener("finish", endHandler);
-
-            return function () {
-                stream.removeListener("data", dataHandler);
-                stream.removeListener("error", errorHandler);
-                stream.removeListener("finish", endHandler);
-            };
-        })
-        .publish()
-        .refCount();
+    this.streamFeedback = streamFeedback;
 }
+SchedulerStream.prototype = Object.create(TransformStream.prototype);
 
-function throttle(otherFactory, options) {
-    var before,
-        otherStream,
-        rxBefore,
-        rxOther;
+SchedulerStream.prototype._transform = function (chunk, encoding, callback) {
+    // this.streamFeedback.streamBuffer.add(chunk, encoding);
+    this.streamFeedback.bufferChunk(chunk, encoding, callback);
+};
 
-    otherStream = otherFactory(options);
-    rxOther = rxFromStream(otherStream);
+function StreamFactory() {
+    TransformStream.call(this);
+}
+StreamFactory.prototype = Object.create(TransformStream.prototype);
 
-    before = through.obj(function (chunk, encoding, callback) {
-        console.log("PLUGIN SPY1", path.basename(chunk.path));
-        this.push(chunk);
+function StreamSupervisor(streamFactory, streamFeedback) {
+    TransformStream.call(this);
 
-        rxOther
-            .filter(function (otherChunk) {
-                return otherChunk === chunk;
-            })
-            .subscribe(function (otherChunk) {
-                console.log("PLUGIN YEP", path.basename(otherChunk.path));
-                callback();
-            });
-    });
+    this.streamFactroy = streamFactroy;
+    this.streamFeedback = streamFeedback;
+}
+StreamSupervisor.prototype = Object.create(TransformStream.prototype);
 
-    rxBefore = Rx.Node
-        .fromStream(before)
-        .flatMap(function (chunk) {
-            var deferred = Q.defer();
+StreamSupervisor.prototype._transform = function (chunk, encoding, callback) {
+    var streamFactory = this.streamFactory,
+        streamFeedback = this.streamFeedback;
 
-            console.log("PLUGIN FLATMAP TIMEOUT", path.basename(chunk.path));
-            setTimeout(function () {
-                console.log("PLUGIN FLATMAP RESOLVE", path.basename(chunk.path));
-                deferred.resolve(chunk);
-            }, 10);
-
-            return deferred.promise;
+    this.streamFeedback
+        .awaitWindow()
+        .then(function () {
+            return streamFactory.applyChunk(chunk, encoding, callback);
+        })
+        .then(function () {
+            streamFeedback.resolveChunk(chunk, encoding, callback);
+        })
+        .fail(function (err) {
+            streamFeedback.rejectChunk(chunk, encoding, callback, err);
         });
+};
 
-    rxOther
-        .subscribe(function (chunk) {
-            console.log("PLUGIN OTHER", path.basename(chunk.path));
-        });
+function throttle(streamFactoryMethod, options) {
+    var streamBuffer = new StreamBuffer(),
+        streamFactory = new StreamFactory(streamFactoryMethod),
+        streamFeedback = new StreamFeedback(streamBuffer),
+        streamSupervisor = new StreamSupervisor(streamFactory, streamFeedback);
 
-    Rx.Node.writeToStream(rxBefore, otherStream);
-
-    return before;
+    return new SchedulerStream(streamFeedback).pipe(streamSupervisor);
 }
 
 module.exports = function () {

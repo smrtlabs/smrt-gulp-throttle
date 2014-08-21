@@ -27,10 +27,10 @@ global.paths = {
     },
     "gulpfile": __filename,
     "libs": {
-        "files": path.join(__dirname, "{gulp-*,smrt-*}/{*.js,tests/**/*.js}")
+        "files": path.join(__dirname, "smrt-*/**/*.js")
     },
     "tests": {
-        "files": path.join(__dirname, "{gulp-*,smrt-*}/**/*.test.js")
+        "files": path.join(__dirname, "smrt-*/**/*.test.js")
     },
     "root": __dirname
 };
